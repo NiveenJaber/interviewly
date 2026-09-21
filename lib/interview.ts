@@ -2,13 +2,13 @@ export type Phase = "behavioral" | "technical";
 export type Question = { id: string; phase: Phase; question: string; focus: string; duration: number };
 export type Feedback = { score: number; strengths: string[]; improvements: string[]; summary: string; tip: string };
 const clean = (s: string) => s.replace(/\s+/g, " ").trim();
-export function extractRole(job: string) { const first = job.split(/[\n.!]/).map(clean).find(x => x.length > 8) || "this role"; return first.slice(0, 80); }
+export function extractRole(job: string) { const heading = clean(job.split(/\r?\n|:/)[0] || ""); return heading.length >= 5 && heading.length <= 60 ? heading : "this role"; }
 export function fallbackQuestions(job: string, resume: string): Question[] {
   const role = extractRole(job);
   const resumeHint = resume.split(/[\n.!]/).map(clean).find(x => x.length > 28 && x.length < 140) || "a project from your resume";
   return [
     { id: "b1", phase: "behavioral", question: `Tell me about yourself and what draws you to ${role}.`, focus: "Motivation and career story", duration: 120 },
-    { id: "b2", phase: "behavioral", question: `Walk me through a challenging situation related to ${resumeHint.toLowerCase()}. What did you do, and what changed?`, focus: "Problem solving and impact", duration: 150 },
+    { id: "b2", phase: "behavioral", question: `Your resume mentions “${resumeHint}”. What challenge came up in that work, what did you do, and what changed?`, focus: "Problem solving and impact", duration: 150 },
     { id: "b3", phase: "behavioral", question: "Tell me about a time you received difficult feedback or disagreed with a teammate. How did you respond?", focus: "Collaboration and growth", duration: 150 },
     { id: "t1", phase: "technical", question: `Which technical skills from your experience are most relevant to ${role}, and how have you applied them?`, focus: "Relevant technical depth", duration: 180 },
     { id: "t2", phase: "technical", question: "Describe the architecture of a project you built. What tradeoffs did you make, and why?", focus: "Architecture and decisions", duration: 180 },

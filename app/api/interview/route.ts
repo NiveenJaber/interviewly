@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       let questions: Question[] = fallbackQuestions(job, resume);
       try {
         const ai = await askAI("Return JSON with a questions array. Create exactly 3 behavioral and 3 technical interview questions tailored to the job and resume. Each object must have id, phase (behavioral or technical), question, focus, duration in seconds. Questions should be specific, fair, and concise. Do not invent resume facts.", `JOB DESCRIPTION:\n${job}\n\nRESUME:\n${resume}`);
-        if (Array.isArray(ai?.questions) && ai.questions.length === 6 && ai.questions.every((q: Question) => q.question && ["behavioral", "technical"].includes(q.phase))) questions = ai.questions.map((q: Question, i: number) => ({ id: String(i + 1), phase: q.phase, question: String(q.question), focus: String(q.focus || "Interview response"), duration: Math.min(300, Math.max(60, Number(q.duration) || 150)) }));
+        if (Array.isArray(ai?.questions) && ai.questions.length === 6 && ai.questions.filter((q: Question) => q.phase === "behavioral").length === 3 && ai.questions.filter((q: Question) => q.phase === "technical").length === 3 && ai.questions.every((q: Question) => q.question)) questions = ai.questions.sort((a: Question, b: Question) => a.phase === b.phase ? 0 : a.phase === "behavioral" ? -1 : 1).map((q: Question, i: number) => ({ id: String(i + 1), phase: q.phase, question: String(q.question), focus: String(q.focus || "Interview response"), duration: Math.min(300, Math.max(60, Number(q.duration) || 150)) }));
       } catch (error) { console.error("Question generation failed; using local questions", error); }
       return NextResponse.json({ questions, mode: process.env.OPENAI_API_KEY ? "ai" : "local" });
     }
