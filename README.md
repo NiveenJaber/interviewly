@@ -2,6 +2,8 @@
 
 A two phase interview practice app built with Next.js. Users provide a job description and resume, answer behavioral and technical questions by voice or text, and receive feedback and a final report.
 
+The public landing page is at `/`, account access is at `/login`, and the interview is at `/interview`.
+
 ## Run locally
 
 ```bash
@@ -10,7 +12,13 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000. Add `GEMINI_API_KEY` to `.env.local` for AI generated questions and feedback. The default model is `gemini-2.5-flash-lite`; change `GEMINI_MODEL` if needed. An optional OpenAI provider remains available through `OPENAI_API_KEY`; Gemini takes priority when both keys are set. Without a working key, the app uses built in question templates and simple answer heuristics, clearly labeled as demo mode.
+Open http://localhost:3000. Add `GEMINI_API_KEY` to `.env.local` for AI generated questions and feedback. The default model is `gemini-3.5-flash-lite`; change `GEMINI_MODEL` if needed. An optional OpenAI provider remains available through `OPENAI_API_KEY`; Gemini takes priority when both keys are set. Without a working key or when the provider fails, the app displays an error rather than invented questions or feedback.
+
+## Free account authentication
+
+Create a free Supabase project. In its dashboard, copy the Project URL and **publishable** API key into `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local`. Never use a Supabase secret or service role key in `NEXT_PUBLIC_` variables. Set `NEXT_PUBLIC_SITE_URL=http://localhost:3000` for local email confirmation, and add `http://localhost:3000/auth/confirm` to the project's allowed redirect URLs. Email/password sign-up, confirmation, login, and logout are then available. When hosted later, update the site URL and allowed redirect URL to the real domain.
+
+Without Supabase configuration, development mode offers a clearly labeled local preview of `/interview`. Production mode requires authentication configuration and does not expose the interview or its API routes. The sign-in flow has not been live-tested against a Supabase project yet because no project credentials have been configured.
 
 ## Features
 
@@ -25,6 +33,6 @@ Open http://localhost:3000. Add `GEMINI_API_KEY` to `.env.local` for AI generate
 
 ## Deploy to Vercel
 
-When you choose to deploy, import the GitHub repository in Vercel. It detects Next.js automatically. Set `GEMINI_API_KEY` in the project's environment variables to enable AI personalization. `GEMINI_MODEL` is optional and defaults to `gemini-2.5-flash-lite`. The key stays on the server and is never sent to the browser. No Vercel deployment has been made yet.
+When you choose to deploy, import the GitHub repository in Vercel. It detects Next.js automatically. Configure the Supabase project URL, publishable key, and site URL, then set `GEMINI_API_KEY` in the project's environment variables to enable AI personalization. `GEMINI_MODEL` is optional and defaults to `gemini-3.5-flash-lite`. The Gemini key stays on the server and is never sent to the browser. No Vercel deployment has been made yet.
 
 The in-progress interview stays in browser memory; reloading starts a new session. Completed reports are saved in browser local storage only when the user enables history, and can be deleted from the history panel. Resume text is never saved in browser history. Resume text and answers go to the app's server for extraction and feedback. When AI is enabled, the server sends the job description, resume, and relevant answer to the configured AI provider. Google's free API tier has model-specific limits and may use free-tier content to improve its products; review its terms before sending real resumes.

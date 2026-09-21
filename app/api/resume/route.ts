@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireInterviewUser } from "@/lib/supabase/guard";
 export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
+  const denied = await requireInterviewUser(request);
+  if (denied) return denied;
   try {
     const file = (await request.formData()).get("file");
     if (!(file instanceof File)) return NextResponse.json({ error: "Choose a file." }, { status: 400 });

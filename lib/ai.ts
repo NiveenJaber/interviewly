@@ -1,8 +1,8 @@
-export type AIMode = "gemini" | "openai" | "local";
+export type AIMode = "gemini" | "openai";
 
 export async function askAI(system: string, user: string): Promise<{ data: Record<string, unknown> | null; mode: AIMode }> {
   if (process.env.GEMINI_API_KEY) {
-    const model = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+    const model = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
@@ -28,5 +28,5 @@ export async function askAI(system: string, user: string): Promise<{ data: Recor
     return { data: JSON.parse(result.choices?.[0]?.message?.content || "{}"), mode: "openai" };
   }
 
-  return { data: null, mode: "local" };
+  throw new Error("Configure a Gemini API key to generate questions and feedback.");
 }
