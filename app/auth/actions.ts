@@ -15,6 +15,17 @@ export async function signIn(formData: FormData) {
   redirect("/interview");
 }
 
+export async function signInWithGoogle() {
+  if (!isAuthConfigured()) redirect("/login?error=setup");
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/confirm` },
+  });
+  if (error || !data.url) redirect("/login?error=google");
+  redirect(data.url);
+}
+
 export async function signUp(formData: FormData) {
   if (!isAuthConfigured()) redirect("/login?error=setup&mode=signup");
   const email = String(formData.get("email") || "").trim();

@@ -1,0 +1,12 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const { parseQuestions, parseFeedback } = require('../.test-build/validation.js');
+const { recommendationsFor } = require('../.test-build/recommendations.js');
+const questions = () => Array.from({ length: 6 }, (_, i) => ({ question: `Question ${i}`, focus: 'Problem solving', phase: i < 3 ? 'behavioral' : 'technical', duration: 150, ...(i === 5 ? { codingTopic: 'sliding-window' } : {}) }));
+const feedback = () => ({ score: 70, strengths: ['Specific example'], improvements: ['Explain complexity'], summary: 'Relevant but incomplete.', tip: 'Describe the bound.', gapTags: ['sliding-window'] });
+test('questions retain full coding requirements and normalize duration', () => { const q = questions(); q[5].question = 'Long coding requirement '.repeat(40); q[5].duration = 500; const result = parseQuestions(q); assert.equal(result[5].question, q[5].question.trim()); assert.equal(result[5].duration, 300); });
+test('reject null, duplicates, wrong phases and behavioral coding tags', () => { assert.equal(parseQuestions([null]), null); const q = questions(); q[1].question = q[0].question; assert.equal(parseQuestions(q), null); const bad = questions(); bad[0].codingTopic = 'trees'; assert.equal(parseQuestions(bad), null); bad[0].phase = 'other'; assert.equal(parseQuestions(bad), null); });
+test('reject coerced scores and nontext feedback', () => { for (const score of [null, '', false, '90', NaN, Infinity, -1, 101]) assert.equal(parseFeedback({ ...feedback(), score }), null); assert.equal(parseFeedback({ ...feedback(), strengths: [{}] }), null); });
+test('coding tags cannot leak into behavioral feedback', () => { assert.deepEqual(parseFeedback(feedback()).gapTags, []); assert.deepEqual(parseFeedback({ ...feedback(), gapTags: ['sliding-window', 'sliding-window', 'invented'] }, 'sliding-window').gapTags, ['sliding-window']); });
+test('recommendations are based on observed coding gaps only', () => { const q = parseQuestions(questions()); assert.equal(recommendationsFor([{ question: q[0], feedback: feedback(), text: 'Answer' }]).length, 0); const r = recommendationsFor([{ question: q[5], feedback: feedback(), text: 'Answer' }]); assert.equal(r.length, 2); assert.ok(r.every(p => p.url.startsWith('https://leetcode.com/problems/'))); assert.equal(recommendationsFor([{ question: q[5], feedback: { ...feedback(), gapTags: [] }, text: 'Answer' }]).length, 0); });
